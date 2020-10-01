@@ -1,0 +1,288 @@
+{
+  "properties": {
+    "displayName": "CCL WVD Adoption landing zone",
+    "description": "CCL WVD Adoption Framework for Azure – Migrations landing zone",
+    "targetScope": "subscription",
+    "parameters": {
+      "Organization_Name": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Enter your organization name (e.g. Contoso), must be unique",
+          "description": "Organization_Name"
+        },
+        "defaultValue": ""
+      },
+      "LogAnalytics_DataRetention": {
+        "type": "int",
+        "metadata": {
+          "displayName": "Number of days data will be retained in Log Analytics",
+          "description": "Number of days data will be retained for"
+        },
+        "defaultValue": 365,
+        "allowedValues": []
+      },
+      "LogAnalytics_Location": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Azure Region used when establishing the Log Analytics workspace",
+          "description": "Region used when establishing the workspace"
+        },
+        "allowedValues": [
+          "Australia Central",
+          "Australia East",
+          "Australia Southeast",
+          "Brazil South",
+          "Canada Central",
+          "Central India",
+          "Central US",
+          "East Asia",
+          "East US",
+          "East US 2",
+          "France Central",
+          "Japan East",
+          "Korea Central",
+          "North Central US",
+          "North Europe",
+          "South Africa North",
+          "South Central US",
+          "Southeast Asia",
+          "UK South",
+          "UK West",
+          "West Europe",
+          "West US",
+          "West US 2"
+        ]
+      },
+      "deployNATGWforWVDvNET_vnetaddressspace": {
+        "type": "string",
+        "metadata": {
+          "displayName": "vnetaddressspace (Deploy NAT GW for WVD vNET)",
+          "description": "Address space for virtual network"
+        },
+        "defaultValue": "192.168.0.0/16",
+        "allowedValues": []
+      },
+      "deployNATGWforWVDvNET_vnetsubnetprefix": {
+        "type": "string",
+        "metadata": {
+          "displayName": "vnetsubnetprefix (Deploy NAT GW for WVD vNET)",
+          "description": "Subnet prefix for virtual network"
+        },
+        "defaultValue": "192.168.0.0/24",
+        "allowedValues": []
+      },
+      "deployNATGWandWVDvNET_networkSecurityGroupsname": {
+        "type": "string",
+        "metadata": {
+          "displayName": "networkSecurityGroupsname (Deploy NAT GW and WVD vNET)"
+        },
+        "defaultValue": "nsg-wvd",
+        "allowedValues": []
+      },
+      "deployWVDImageBuildKeyVault_keyVaultName": {
+        "type": "string",
+        "metadata": {
+          "displayName": "keyVaultName (Deploy WVD Image Build Key Vault)",
+          "description": "Specifies the name of the key vault."
+        },
+        "allowedValues": []
+      },
+      "deployWVDImageBuildKeyVault_objectId": {
+        "type": "string",
+        "metadata": {
+          "displayName": "objectId (Deploy WVD Image Build Key Vault)",
+          "description": "Specifies the object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. Get it by using Get-AzADUser or Get-AzADServicePrincipal cmdlets."
+        },
+        "allowedValues": []
+      },
+      "deployWVDImageBuildvNET_vnetName": {
+        "type": "string",
+        "metadata": {
+          "displayName": "vnetName (Deploy WVD Image Build vNET)",
+          "description": "VNet name"
+        },
+        "defaultValue": "VNet1",
+        "allowedValues": []
+      },
+      "deployWVDImageBuildvNET_vnetAddressPrefix": {
+        "type": "string",
+        "metadata": {
+          "displayName": "vnetAddressPrefix (Deploy WVD Image Build vNET)",
+          "description": "Address prefix"
+        },
+        "defaultValue": "10.0.0.0/16",
+        "allowedValues": []
+      },
+      "deployWVDImageBuildvNET_subnet1Prefix": {
+        "type": "string",
+        "metadata": {
+          "displayName": "subnet1Prefix (Deploy WVD Image Build vNET)",
+          "description": "Subnet 1 Prefix"
+        },
+        "defaultValue": "10.0.0.0/24",
+        "allowedValues": []
+      },
+      "deployWVDImageBuildvNET_subnet1Name": {
+        "type": "string",
+        "metadata": {
+          "displayName": "subnet1Name (Deploy WVD Image Build vNET)",
+          "description": "Subnet 1 Name"
+        },
+        "defaultValue": "Subnet1",
+        "allowedValues": []
+      },
+      "deployWVDImageBuildvNET_subnet2Prefix": {
+        "type": "string",
+        "metadata": {
+          "displayName": "subnet2Prefix (Deploy WVD Image Build vNET)",
+          "description": "Subnet 2 Prefix"
+        },
+        "defaultValue": "10.0.1.0/24",
+        "allowedValues": []
+      },
+      "deployWVDImageBuildvNET_subnet2Name": {
+        "type": "string",
+        "metadata": {
+          "displayName": "subnet2Name (Deploy WVD Image Build vNET)",
+          "description": "Subnet 2 Name"
+        },
+        "defaultValue": "Subnet2",
+        "allowedValues": []
+      },
+      "deployWVDImageBuildStorageAccount_storageAccountName": {
+        "type": "string",
+        "metadata": {
+          "displayName": "storageAccountName (Deploy WVD Image Build Storage Account)",
+          "description": "Specifies the name of the Azure Storage account."
+        },
+        "allowedValues": []
+      },
+      "deployWVDImageBuildStorageAccount_fileShareName": {
+        "type": "string",
+        "metadata": {
+          "displayName": "fileShareName (Deploy WVD Image Build Storage Account)",
+          "description": "Specifies the name of the File Share. File share names must be between 3 and 63 characters in length and use numbers, lower-case letters and dash (-) only."
+        },
+        "allowedValues": []
+      },
+      "deployWVDImageBuildStorageAccount_location": {
+        "type": "string",
+        "metadata": {
+          "displayName": "location (Deploy WVD Image Build Storage Account)",
+          "description": "Specifies the location in which the Azure Storage resources should be deployed."
+        },
+        "allowedValues": []
+      },
+      "deployWVDSharedImageGallery_location": {
+        "type": "string",
+        "metadata": {
+          "displayName": "location (Deploy WVD Shared Image Gallery)"
+        },
+        "allowedValues": []
+      },
+      "deployWVDSharedImageGallery_name": {
+        "type": "string",
+        "metadata": {
+          "displayName": "name (Deploy WVD Shared Image Gallery)"
+        },
+        "allowedValues": []
+      },
+      "deployWVDSharedImageGallery_description": {
+        "type": "string",
+        "metadata": {
+          "displayName": "description (Deploy WVD Shared Image Gallery)"
+        },
+        "defaultValue": "Shared Gallery Description",
+        "allowedValues": []
+      },
+      "deployWVDfileShareStorageaccount_storageAccounts_name": {
+        "type": "string",
+        "metadata": {
+          "displayName": "storageAccounts_name (Deploy WVD file Share Storage account)"
+        },
+        "defaultValue": "wvdfileshare",
+        "allowedValues": []
+      },
+      "deployWVDfileShareStorageaccount_storageAccounts_location": {
+        "type": "string",
+        "metadata": {
+          "displayName": "storageAccounts_location (Deploy WVD file Share Storage account)"
+        },
+        "defaultValue": "australiaeast",
+        "allowedValues": []
+      }
+    },
+    "resourceGroups": {
+      "SharedServices-RG": {
+        "metadata": {
+          "displayName": "Resource Group for WVD Monitoring"
+        },
+        "dependsOn": [],
+        "tags": {
+          "ower": "Lei Zhou",
+          "project": "WVD Dev"
+        }
+      },
+      "Network-RG": {
+        "metadata": {
+          "displayName": "Resource Group for WVD Networks"
+        },
+        "dependsOn": [],
+        "tags": {
+          "owner": "Lei Zhou",
+          "project": "WVD Dev"
+        }
+      },
+      "ResourceGroup": {
+        "metadata": {
+          "displayName": "Resource group for AD Domain Services"
+        },
+        "dependsOn": [],
+        "tags": {
+          "owner": "Lei Zhou",
+          "project": "WVD Dev"
+        }
+      },
+      "ResourceGroup2": {
+        "metadata": {
+          "displayName": "Resource group for WVD Management"
+        },
+        "dependsOn": [],
+        "tags": {
+          "owner": "Lei Zhou",
+          "project": "WVD Dev"
+        }
+      },
+      "ResourceGroup3": {
+        "metadata": {
+          "displayName": "Resource group for WVD Build"
+        },
+        "dependsOn": [],
+        "tags": {
+          "owner": "Lei Zhou",
+          "project": "WVD Dev"
+        }
+      },
+      "ResourceGroup4": {
+        "metadata": {
+          "displayName": "Resource group for WVD Image"
+        },
+        "dependsOn": [],
+        "tags": {
+          "owner": "Lei Zhou",
+          "project": "WVD Dev"
+        }
+      },
+      "ResourceGroup5": {
+        "metadata": {
+          "displayName": "Resource group for WVD File Share"
+        },
+        "dependsOn": [],
+        "tags": {
+          "owner": "Lei Zhou",
+          "project": "WVD Dev"
+        }
+      }
+    }
+  }
+}

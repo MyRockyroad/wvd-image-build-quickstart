@@ -1,0 +1,236 @@
+{
+  "variables": {
+    "client_id": "",
+    "client_secret": "",
+    "AppInstallsStorageAccountName": "",
+    "AppInstallsStorageAccountKey": "",
+    "wvd_goldimage_rg": "rg-wvd-auc",
+    "az_tenant_id": "{{env `az_tenant_id`}}",
+    "subscription_id": "{{env `ARM_SUBSCRIPTION_ID`}}",
+    "packaged_app_installs_path": "{{env `packaged_app_installs_path`}}",
+    "Build_DefinitionName": "{{env `Build_DefinitionName`}}",
+    "Build_BuildNumber": "{{env `Build_BuildNumber`}}",
+    "SourcesDir": "{{env `Build_SourcesDirectory`}}"
+  },
+  "sensitive-variables": [
+    "client_secret",
+    "AppInstallsStorageAccountKey"
+  ],
+  "builders": [
+    {
+      "type": "azure-arm",
+      "client_id": "{{user `client_id`}}",
+      "client_secret": "{{user `client_secret`}}",
+      "tenant_id": "{{user `az_tenant_id`}}",
+      "subscription_id": "{{user `subscription_id`}}",
+      "os_type": "Windows",
+      "managed_image_name": "{{user `Build_DefinitionName` | clean_image_name}}-{{isotime \"2006-01-02-1504\"}}-Build{{user `Build_BuildNumber`}}",
+      "managed_image_resource_group_name": "{{user `wvd_goldimage_rg`}}",
+      "managed_image_storage_account_type": "Standard_LRS",      
+      "shared_image_gallery_destination": {
+        "resource_group": "imagelib-rg",
+        "gallery_name": "CloudLabLib",
+        "image_name": "{{user `Build_DefinitionName` | clean_image_name}}",
+        "image_version": "1.0.{{user `Build_BuildNumber`}}",
+        "replication_regions": [
+          "australiacentral",
+          "australiaeast"
+        ]
+      },      
+      "image_publisher": "MicrosoftWindowsDesktop",
+      "image_offer": "Windows-10",
+      "image_sku": "20h1-evd",
+      "communicator": "winrm",
+      "winrm_use_ssl": "true",
+      "winrm_insecure": "true",
+      "winrm_timeout": "20m",
+      "winrm_username": "packer",
+      "temp_resource_group_name": "PackerBuild-Temp",
+      "virtual_network_name": "vnet-packerimage-auc",
+      "virtual_network_subnet_name": "Subnet-PackerImage",
+      "private_virtual_network_with_public_ip": "True",
+      "virtual_network_resource_group_name": "Packer-network-rg",
+      "azure_tags": {
+        "Project": "WVD Dev",
+        "Owner": "Shared"
+      },
+      "location": "australiacentral",
+      "vm_size": "Standard_D2_v2",
+      "async_resourcegroup_delete": true
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "windows-update",
+      "search_criteria": "IsInstalled=0",
+      "filters": [
+        "exclude:$_.Title -like '*Preview*'",
+        "include:$true"
+      ]
+    },
+    {
+      "type": "windows-restart",
+      "restart_check_command": "powershell -command \"& {Write-Output 'restarted.'}\""
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Install Scripts\\NotepadPlusPlus.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Validate Scripts\\NotepadPlusPlusValidate.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Install Scripts\\Edge.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Validate Scripts\\EdgeValidate.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Install Scripts\\GoogleChrome.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Validate Scripts\\GoogleChromeValidate.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Install Scripts\\Firefox.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Validate Scripts\\FirefoxValidate.ps1"
+    },
+    {
+      "type": "file",
+      "source": "{{user `SourcesDir`}}\\Application Setting Files\\AcrobatReaderDefault.mst",
+      "destination": "C:\\Windows\\Temp\\AcrobatReaderDefault.mst"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Install Scripts\\AcrobatReader.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Validate Scripts\\AcrobatReaderValidate.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Install Scripts\\ezeepPrintApp.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Validate Scripts\\ezeepPrintAppValidate.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Install Scripts\\Teams.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Validate Scripts\\TeamsValidate.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Install Scripts\\TeamsMsRdcWebRTCSvc.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Validate Scripts\\TeamsMsRdcWebRTCSvcValidate.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Install Scripts\\OneDrivePerMachine.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Validate Scripts\\OneDrivePerMachineValidate.ps1"
+    },
+    {
+      "type": "file",
+      "source": "{{user `SourcesDir`}}\\O365ConfigrationXML\\configuration-Office365-x64.xml",
+      "destination": "C:\\Windows\\Temp\\configuration-Office365.xml"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Install Scripts\\Office365.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Validate Scripts\\Office365Validate.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Install Scripts\\FSLogix.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Validate Scripts\\FSLogixValidate.ps1"
+    },
+    {
+      "type": "windows-restart",
+      "restart_check_command": "powershell -command \"& {Write-Output 'restarted.'}\""
+    },
+    {
+      "type": "windows-update",
+      "search_criteria": "IsInstalled=0",
+      "filters": [
+        "exclude:$_.Title -like '*Preview*'",
+        "include:$true"
+      ]
+    },
+    {
+      "type": "powershell",
+      "inline": [
+        "$ErrorActionPreference='Stop'",
+        "Write-Host \"Removing leftover packer-windows-update Scheduled Tasks\"",
+        "Get-ScheduledTask | where-object {$_.taskname -like \"packer-windows-update*\"} | Unregister-ScheduledTask -Confirm:$false",
+        "Write-Host \"Completed removing leftover packer-windows-update Scheduled Tasks\""
+      ]
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Tuning Scripts\\AppxPackageCleanup.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Tuning Scripts\\DisableServices.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Tuning Scripts\\DisableSystemStartupEventTraces.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Tuning Scripts\\RegistryOptimisations.ps1"
+    },    
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Tuning Scripts\\WindowsScheduledTaskCleanup.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "{{user `SourcesDir`}}\\Tuning Scripts\\DiskCleanup.ps1"
+    },
+    {
+      "type": "windows-restart",
+      "restart_check_command": "powershell -command \"& {Write-Output 'restarted.'}\""
+    },
+    {
+      "type": "powershell",
+      "inline": [
+        " # NOTE: the following *3* lines are only needed if the you have installed the Guest Agent.",
+        "  while ((Get-Service RdAgent).Status -ne 'Running') { write-output 'Waiting for RdAgent Service to start.'; Start-Sleep -s 5 }",
+        "  while ((Get-Service WindowsAzureTelemetryService -ErrorAction SilentlyContinue) -and (Get-Service WindowsAzureTelemetryService).Status -ne 'Running') { write-output 'Waiting for Windows Azure Telemetry Service to start.'; Start-Sleep -s 5 }",
+        "  while ((Get-Service WindowsAzureGuestAgent).Status -ne 'Running') { write-output 'Waiting for Windows Azure Guest Agent Service to start.'; Start-Sleep -s 5 }",
+        "if( Test-Path $Env:SystemRoot\\windows\\system32\\Sysprep\\unattend.xml ){ Remove-Item $Env:SystemRoot\\windows\\system32\\Sysprep\\unattend.xml -Force}",
+        "& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit",
+        "while($true) { $imageState = Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State | Select ImageState; if($imageState.ImageState -ne 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { Write-Output $imageState.ImageState; Start-Sleep -s 10  } else { break } }",
+        "Write-Output '>>> Sysprep complete ...'"
+      ]
+    }
+  ]
+}

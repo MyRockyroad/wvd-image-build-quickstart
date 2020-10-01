@@ -1,0 +1,48 @@
+{
+  "kind": "template",
+  "properties": {
+    "displayName": "Deploy WVD Shared Image Gallery",
+    "description": "",
+    "dependsOn": [],
+    "template": {
+      "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "location": {
+          "type": "string",
+          "defaultValue": "[resourceGroup().location]"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "defaultValue": "Shared Gallery Description"
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "2018-06-01",
+          "type": "Microsoft.Compute/galleries",
+          "name": "[parameters('name')]",
+          "location": "[parameters('location')]",
+          "properties": {
+            "description": "[parameters('description')]"
+          }
+        }
+      ]
+    },
+    "resourceGroup": "ResourceGroup4",
+    "parameters": {
+      "location": {
+        "value": "[parameters('deployWVDSharedImageGallery_location')]"
+      },
+      "name": {
+        "value": "[parameters('deployWVDSharedImageGallery_name')]"
+      },
+      "description": {
+        "value": "[parameters('deployWVDSharedImageGallery_description')]"
+      }
+    }
+  }
+}

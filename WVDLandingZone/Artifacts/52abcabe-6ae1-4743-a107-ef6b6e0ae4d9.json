@@ -1,0 +1,399 @@
+{
+  "kind": "template",
+  "properties": {
+    "displayName": "Deploy NAT GW and WVD vNET",
+    "description": "",
+    "dependsOn": [],
+    "template": {
+      "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "vnetname": {
+          "defaultValue": "Vnet-WVD",
+          "type": "String",
+          "metadata": {
+            "description": "Name of the virtual network"
+          }
+        },
+        "subnetname": {
+          "defaultValue": "subnet-wvd",
+          "type": "String",
+          "metadata": {
+            "description": "Name of the subnet for virtual network"
+          }
+        },
+        "vnetaddressspace": {
+          "defaultValue": "192.168.0.0/16",
+          "type": "String",
+          "metadata": {
+            "description": "Address space for virtual network"
+          }
+        },
+        "vnetsubnetprefix": {
+          "defaultValue": "192.168.0.0/24",
+          "type": "String",
+          "metadata": {
+            "description": "Subnet prefix for virtual network"
+          }
+        },
+        "natgatewayname": {
+          "defaultValue": "WVDNATgateway",
+          "type": "String",
+          "metadata": {
+            "description": "Name of the NAT gateway resource"
+          }
+        },
+        "publicipdns": {
+          "defaultValue": "[concat('gw-', uniqueString(resourceGroup().id))]",
+          "type": "String",
+          "metadata": {
+            "description": "dns of the public ip address, leave blank for no dns"
+          }
+        },
+        "location": {
+          "defaultValue": "[resourceGroup().location]",
+          "type": "String",
+          "metadata": {
+            "description": "Location of resources"
+          }
+        },
+        "networkSecurityGroupsname": {
+          "defaultValue": "nsg-wvd",
+          "type": "String"
+        }
+      },
+      "variables": {
+        "publicIpName": "[concat(parameters('natgatewayname'), 'ip')]",
+        "publicIpAddresses": [
+          {
+            "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicipname'))]"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "type": "Microsoft.Network/publicIPAddresses",
+          "apiVersion": "2019-11-01",
+          "name": "[variables('publicIpName')]",
+          "location": "[parameters('location')]",
+          "sku": {
+            "name": "Standard"
+          },
+          "properties": {
+            "publicIPAddressVersion": "IPv4",
+            "publicIPAllocationMethod": "Static",
+            "idleTimeoutInMinutes": 4,
+            "dnsSettings": {
+              "domainNameLabel": "[parameters('publicipdns')]"
+            }
+          }
+        },
+        {
+          "type": "Microsoft.Network/natGateways",
+          "apiVersion": "2019-11-01",
+          "name": "[parameters('natgatewayname')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicipname'))]"
+          ],
+          "sku": {
+            "name": "Standard"
+          },
+          "properties": {
+            "idleTimeoutInMinutes": 4,
+            "publicIpAddresses": "[if(not(empty(parameters('publicipdns'))), variables('publicIpAddresses'), json('null'))]"
+          }
+        },
+        {
+          "apiVersion": "2020-05-01",
+          "type": "Microsoft.Network/networkSecurityGroups",
+          "name": "[parameters('networkSecurityGroupsname')]",
+          "location": "[parameters('location')]",
+          "properties": {
+            "securityRules": [
+              {
+                "name": "ALLOW--WVD--OUTBOUND",
+                "properties": {
+                  "description": "*.wvd.microsoft.com",
+                  "protocol": "TCP",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "443",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationAddressPrefix": "WindowsVirtualDesktop",
+                  "access": "Allow",
+                  "priority": 1000,
+                  "direction": "Outbound",
+                  "sourcePortRanges": [],
+                  "destinationPortRanges": [],
+                  "sourceAddressPrefixes": [],
+                  "destinationAddressPrefixes": []
+                }
+              },
+              {
+                "name": "ALLOW-AzureCloud-OUTBOUND",
+                "properties": {
+                    "description": "https://docs.microsoft.com/en-us/azure/virtual-desktop/overview",
+                    "protocol": "TCP",
+                    "sourcePortRange": "*",
+                    "destinationPortRange": "443",
+                    "sourceAddressPrefix": "VirtualNetwork",
+                    "destinationAddressPrefix": "AzureCloud",
+                    "access": "Allow",
+                    "priority": 1010,
+                    "direction": "Outbound",
+                    "sourcePortRanges": [],
+                    "destinationPortRanges": [],
+                    "sourceAddressPrefixes": [],
+                    "destinationAddressPrefixes": []
+                }
+            },
+            {
+                "name": "ALLOW--AzureKMS-OUTBOUND",
+                "properties": {
+                    "description": "kms.core.windows.net",
+                    "protocol": "TCP",
+                    "sourcePortRange": "*",
+                    "destinationPortRange": "1688",
+                    "sourceAddressPrefix": "VirtualNetwork",
+                    "destinationAddressPrefix": "23.102.35.246",
+                    "access": "Allow",
+                    "priority": 1020,
+                    "direction": "Outbound",
+                    "sourcePortRanges": [],
+                    "destinationPortRanges": [],
+                    "sourceAddressPrefixes": [],
+                    "destinationAddressPrefixes": []
+                }
+            },
+            {
+                "name": "ALLOW--INTERNET--ACCESS",
+                "properties": {
+                    "protocol": "TCP",
+                    "sourcePortRange": "*",
+                    "sourceAddressPrefix": "VirtualNetwork",
+                    "destinationAddressPrefix": "Internet",
+                    "access": "Allow",
+                    "priority": 1030,
+                    "direction": "Outbound",
+                    "sourcePortRanges": [],
+                    "destinationPortRanges": [
+                        "443",
+                        "80"
+                    ],
+                    "sourceAddressPrefixes": [],
+                    "destinationAddressPrefixes": []
+                }
+            },
+            {
+                "name": "DENY--INTERNET--OTHER",
+                "properties": {
+                    "description": "Default deny Internet acesss",
+                    "protocol": "*",
+                    "sourcePortRange": "*",
+                    "destinationPortRange": "*",
+                    "sourceAddressPrefix": "VirtualNetwork",
+                    "destinationAddressPrefix": "Internet",
+                    "access": "Deny",
+                    "priority": 4096,
+                    "direction": "Outbound",
+                    "sourcePortRanges": [],
+                    "destinationPortRanges": [],
+                    "sourceAddressPrefixes": [],
+                    "destinationAddressPrefixes": []
+                }
+            }
+            ]
+          }
+        },
+        {
+          "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+          "apiVersion": "2020-05-01",
+          "name": "[concat(parameters('networkSecurityGroupsname'), '/ALLOW--WVD--OUTBOUND')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupsname'))]"
+          ],
+          "properties": {
+            "description": "*.wvd.microsoft.com",
+            "protocol": "TCP",
+            "sourcePortRange": "*",
+            "destinationPortRange": "443",
+            "sourceAddressPrefix": "VirtualNetwork",
+            "destinationAddressPrefix": "WindowsVirtualDesktop",
+            "access": "Allow",
+            "priority": 1000,
+            "direction": "Outbound",
+            "sourcePortRanges": [],
+            "destinationPortRanges": [],
+            "sourceAddressPrefixes": [],
+            "destinationAddressPrefixes": []
+          }
+        },
+        {
+          "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+          "apiVersion": "2020-05-01",
+          "name": "[concat(parameters('networkSecurityGroupsname'), '/ALLOW-AzureCloud-OUTBOUND')]",
+          "dependsOn": [
+              "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupsname'))]"
+          ],
+          "properties": {
+              "description": "https://docs.microsoft.com/en-us/azure/virtual-desktop/overview",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "AzureCloud",
+              "access": "Allow",
+              "priority": 1010,
+              "direction": "Outbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+          }
+      },
+      {
+          "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+          "apiVersion": "2020-05-01",
+          "name": "[concat(parameters('networkSecurityGroupsname'), '/ALLOW--AzureKMS-OUTBOUND')]",
+          "dependsOn": [
+              "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupsname'))]"
+          ],
+          "properties": {
+              "description": "kms.core.windows.net",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1688",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "23.102.35.246",
+              "access": "Allow",
+              "priority": 1020,
+              "direction": "Outbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+          }
+      },
+      {
+          "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+          "apiVersion": "2020-05-01",
+          "name": "[concat(parameters('networkSecurityGroupsname'), '/ALLOW--INTERNET--ACCESS')]",
+          "dependsOn": [
+              "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupsname'))]"
+          ],
+          "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 1030,
+              "direction": "Outbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [
+                  "443",
+                  "80"
+              ],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+          }
+      },
+      {
+          "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+          "apiVersion": "2020-05-01",
+          "name": "[concat(parameters('networkSecurityGroupsname'), '/DENY--INTERNET--OTHER')]",
+          "dependsOn": [
+              "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupsname'))]"
+          ],
+          "properties": {
+              "description": "Default deny Internet acesss",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Internet",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Outbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+          }
+      },
+        {
+          "type": "Microsoft.Network/virtualNetworks",
+          "apiVersion": "2019-11-01",
+          "name": "[parameters('vnetname')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Network/natGateways', parameters('natgatewayname'))]"
+          ],
+          "properties": {
+            "addressSpace": {
+              "addressPrefixes": [
+                "[parameters('vnetaddressspace')]"
+              ]
+            },
+            "subnets": [
+              {
+                "name": "[parameters('subnetname')]",
+                "properties": {
+                  "addressPrefix": "[parameters('vnetsubnetprefix')]",
+                  "natGateway": {
+                    "id": "[resourceId('Microsoft.Network/natGateways', parameters('natgatewayname'))]"
+                  },
+                  "privateEndpointNetworkPolicies": "Enabled",
+                  "privateLinkServiceNetworkPolicies": "Enabled"
+                }
+              }
+            ],
+            "enableDdosProtection": false,
+            "enableVmProtection": false
+          }
+        },
+        {
+          "type": "Microsoft.Network/virtualNetworks/subnets",
+          "apiVersion": "2019-11-01",
+          "name": "[concat(parameters('vnetname'), '/subnet-wvd')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetname'))]",
+            "[resourceId('Microsoft.Network/natGateways', parameters('natgatewayname'))]"
+          ],
+          "properties": {
+            "addressPrefix": "[parameters('vnetsubnetprefix')]",
+            "networkSecurityGroup": {
+              "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupsname'))]"
+            },
+            "natGateway": {
+              "id": "[resourceId('Microsoft.Network/natGateways', parameters('natgatewayname'))]"
+            },
+            "privateEndpointNetworkPolicies": "Enabled",
+            "privateLinkServiceNetworkPolicies": "Enabled"
+          }
+        }
+      ]
+    },
+    "resourceGroup": "Network-RG",
+    "parameters": {
+      "vnetname": {
+        "value": "Vnet-wvd"
+      },
+      "subnetname": {
+        "value": "subnet-wvd"
+      },
+      "vnetaddressspace": {
+        "value": "[parameters('deployNATGWforWVDvNET_vnetaddressspace')]"
+      },
+      "vnetsubnetprefix": {
+        "value": "[parameters('deployNATGWforWVDvNET_vnetsubnetprefix')]"
+      },
+      "natgatewayname": {
+        "value": "WVDNATgateway"
+      },
+      "networkSecurityGroupsname": {
+        "value": "[parameters('deployNATGWandWVDvNET_networkSecurityGroupsname')]"
+      }
+    }
+  }
+}
