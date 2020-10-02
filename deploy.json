@@ -136,7 +136,10 @@
                     "dependsOn": [
                         "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'))]"
                     ],
-                    "tags": {},
+                    "tags": {                
+                        "Project": "WVD Dev",
+                        "Owner": "Lei Zhou"
+                        },
                     "properties": {
                         "userName": "[parameters('azureAdminUpn')]",
                         "password": "[parameters('azureAdminPassword')]"
@@ -152,7 +155,10 @@
                         "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'), '/credentials/AzureCredentials')]",
                         "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'), '/credentials/domainJoinCredentials')]"
                     ],
-                    "tags": {},
+                    "tags": {
+                        "Project": "WVD Dev",
+                        "Owner": "Lei Zhou"
+                    },
                     "properties": {
                         "runbookType": "PowerShell",
                         "logProgress": false,
@@ -174,7 +180,9 @@
                         "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'), '/runbooks/inputValidationRunbook')]"
                     ],
                     "tags": {
-                        "key": "value"
+                        "key": "value",
+                        "Project": "WVD Dev",
+                        "Owner": "Lei Zhou"
                     },
                     "properties": {
                         "runbook": {
@@ -191,7 +199,10 @@
                         "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'))]",
                         "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'), '/credentials/AzureCredentials')]"
                     ],
-                    "tags": {},
+                    "tags": {
+                        "Project": "WVD Dev",
+                        "Owner": "Lei Zhou"                        
+                    },
                     "properties": {
                         "runbookType": "PowerShell",
                         "logProgress": false,
@@ -214,7 +225,9 @@
                         "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'), '/jobs/', variables('jobGuid0'))]"
                     ],
                     "tags": {
-                        "key": "value"
+                        "key": "value",
+                        "Project": "WVD Dev",
+                        "Owner": "Lei Zhou"
                     },
                     "properties": {
                         "runbook": {
@@ -231,7 +244,10 @@
                         "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'))]",
                         "[concat('microsoft.visualstudio/account/', variables('devOpsName'))]"
                     ],
-                    "tags": {},
+                    "tags": {
+                        "Project": "WVD Dev",
+                        "Owner": "Lei Zhou"                        
+                    },
                     "properties": {
                         "runbookType": "PowerShell",
                         "logProgress": false,
@@ -257,7 +273,9 @@
                         "[concat('Microsoft.KeyVault/vaults/', variables('keyvaultName'))]"
                     ],
                     "tags": {
-                        "key": "value"
+                        "key": "value",
+                        "Project": "WVD Dev",
+                        "Owner": "Lei Zhou"
                     },
                     "properties": {
                         "runbook": {
@@ -274,7 +292,10 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('autoAccountName'))]"
             ],
-            "tags": {},
+            "tags": {
+                        "Project": "WVD Dev",
+                        "Owner": "Lei Zhou"
+            },
             "properties": {
                 "value": "[variables('automationVariables')[copyIndex()].value]"
             },
