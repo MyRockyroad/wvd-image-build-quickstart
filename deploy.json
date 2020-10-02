@@ -30,8 +30,7 @@
         }
     },
     "variables": {
-        "_artifactsLocation": "https://raw.githubusercontent.com/stgeorgi/wvdquickstart/master",
-        "AdminPasswordSecret": "adminPassword",
+        "_artifactsLocation": "https://raw.githubusercontent.com/MyRockyroad/wvd-image-build-quickstart/master",
         "identityName": "WVDServicePrincipal",
         "location": "[resourcegroup().location]",
         "rgName": "[resourcegroup().name]",
