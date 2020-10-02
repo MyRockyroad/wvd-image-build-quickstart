@@ -1,32 +1,7 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "existingVnetName": {
-            "type": "string",
-            "metadata": {
-                "description": "The name of the virtual network the VMs will be connected to. For example, this could be 'adVnet'"
-            }
-        },
-        "existingSubnetName": {
-            "type": "string",
-            "metadata": {
-                "description": "The subnet the VMs will be placed in. For example, this could be 'adSubnet', or 'default'"
-            }
-        },
-        "virtualNetworkResourceGroupName": {
-            "type": "string",
-            "metadata": {
-                "description": "The resource group containing the existing virtual network."
-            }
-        },
-        "domainControllerVMName": {
-            "type": "string",
-            "metadata": {
-                "description": "The name of the VM with the domain controller on it. Required only when using AD Identity Approach."
-            },
-            "defaultValue": ""
-        },
         "azureAdminUpn": {
             "type": "string",
             "metadata": {
@@ -38,28 +13,6 @@
             "metadata": {
                 "description": "The password that corresponds to the Azure admin UPN above."
             }
-        },
-        "DomainJoinAccountUPN": {
-            "type": "string",
-            "metadata": {
-                "description": "User or service account UPN (<username>@<domain-to-join>.com) with sufficient privileges to domain join virtual machines. Additionally, please make sure the username is allowed (aka.ms/usernames) - Certain common usernames such as 'admin' are not allowed for this account. The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate."
-            }
-        },
-        "DomainJoinAccountPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "The password that corresponds to the domain join account UPN."
-            }
-        },
-        "identityApproach": {
-            "type": "string",
-            "metadata": {
-                "description": "Specify which identity approach you would like to use for your WVD deployment. Pick either AD (Active Directory Domain Services) or Azure AD DS (Azure Active Directory Domain Services)"
-            },
-            "allowedValues": [
-                "AD",
-                "Azure AD DS"
-            ]
         },
         "optionalNotificationEmail": {
             "type": "string",
@@ -79,8 +32,6 @@
     "variables": {
         "_artifactsLocation": "https://raw.githubusercontent.com/stgeorgi/wvdquickstart/master",
         "AdminPasswordSecret": "adminPassword",
-        "existingDomainUsername": "[first(split(parameters('DomainJoinAccountUPN'), '@'))]",
-        "existingDomainName": "[split(parameters('DomainJoinAccountUPN'), '@')[1]]",
         "identityName": "WVDServicePrincipal",
         "location": "[resourcegroup().location]",
         "rgName": "[resourcegroup().name]",
@@ -129,14 +80,6 @@
                 "value": "[concat('\"',variables('location'),'\"')]"
             },
             {
-                "name": "adminUsername",
-                "value": "[concat('\"',variables('existingDomainUsername'),'\"')]"
-            },
-                        {
-                "name": "domainName",
-                "value": "[concat('\"',variables('existingDomainName'),'\"')]"
-            },
-            {
                 "name": "keyvaultName",
                 "value": "[concat('\"',variables('keyvaultName'),'\"')]"
             },
@@ -149,38 +92,15 @@
                 "value": "[concat('\"',variables('profilesName'),'\"')]"
             },
             {
-                "name": "DomainJoinAccountUPN",
-                "value": "[concat('\"',parameters('DomainJoinAccountUPN'),'\"')]"
-            },
-            {
-                "name": "computerName",
-                "value": "[concat('\"',parameters('domainControllerVMName'),'\"')]"
-            },
-            {
-                "name": "existingVnetName",
-                "value": "[concat('\"',parameters('existingVnetName'),'\"')]"
-            },
-            {
-                "name": "existingSubnetName",
-                "value": "[concat('\"',parameters('existingSubnetName'),'\"')]"
-            },
-            {
-                "name": "virtualNetworkResourceGroupName",
-                "value": "[concat('\"',parameters('virtualNetworkResourceGroupName'),'\"')]"
-            },
-            {
                 "name": "targetGroup",
                 "value": "[concat('\"', variables('targetGroup'),'\"')]"
-            },
-            {
-                "name": "identityApproach",
-                "value": "[concat('\"',parameters('identityApproach'),'\"')]"
             },
             {
                 "name": "notificationEmail",
                 "value": "[concat('\"',parameters('optionalNotificationEmail'),'\"')]"
             }
-        ]   
+        ]
+
     },
     "functions": [
     ],
@@ -194,7 +114,7 @@
         },
         {
             "type": "Microsoft.Automation/automationAccounts",
-            "apiVersion": "2015-01-01-preview",
+            "apiVersion": "2019-04-01",
             "name": "[variables('autoAccountName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
@@ -218,20 +138,6 @@
                     "properties": {
                         "userName": "[parameters('azureAdminUpn')]",
                         "password": "[parameters('azureAdminPassword')]"
-                    }
-                },
-                {
-                    "type": "credentials",
-                    "apiVersion": "2015-01-01-preview",
-                    "name": "domainJoinCredentials",
-                    "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'))]"
-                    ],
-                    "tags": {},
-                    "properties": {
-                        "userName": "[parameters('DomainJoinAccountUPN')]",
-                        "password": "[parameters('DomainJoinAccountPassword')]"
                     }
                 },
                 {
@@ -281,8 +187,7 @@
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'))]",
-                        "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'), '/credentials/AzureCredentials')]",
-                        "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'), '/credentials/domainJoinCredentials')]"
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'), '/credentials/AzureCredentials')]"
                     ],
                     "tags": {},
                     "properties": {
@@ -425,18 +330,6 @@
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2015-06-01",
-            "name": "[concat(variables('keyvaultName'), '/', variables('AdminPasswordSecret'))]",
-            "properties": {
-                "name": "[variables('AdminPasswordSecret')]",
-                "value": "[parameters('DomainJoinAccountPassword')]"
-            },
-            "dependsOn": [
-                "[concat('Microsoft.KeyVault/vaults/', variables('keyvaultName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2015-06-01",
             "name": "[concat(variables('keyvaultName'), '/azurePassword')]",
             "properties": {
                 "name": "azurePassword",
@@ -484,50 +377,6 @@
                 "timeout": "PT30M",
                 "cleanupPreference": "OnSuccess",
                 "retentionInterval": "P1D"
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2019-10-01",
-            "name": "userCreation",
-            "dependsOn": [
-                "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('identityName'))]",
-                "[concat('Microsoft.Automation/automationAccounts/', variables('autoAccountName'), '/jobs/', variables('jobGuid0'))]"
-            ],
-            "resourceGroup": "[parameters('virtualNetworkResourceGroupName')]",
-            "subscriptionId": "[subscription().subscriptionId]",
-            "condition": "[equals(parameters('identityApproach'), 'AD')]",
-            "properties": {
-            "mode": "Incremental",
-            "template": {
-                "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-                "contentVersion": "1.0.0.0",
-                "parameters": {},
-                "variables": {},
-                "resources": [
-                {
-                    "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "apiVersion": "2019-12-01",
-                    "name": "[concat(parameters('domainControllerVMName'),'/', 'userCreation')]",
-                    "location": "[resourcegroup().location]",
-                    "dependsOn": [
-                    ],
-                    "properties": {
-                        "publisher": "Microsoft.Compute",
-                        "type": "CustomScriptExtension",
-                        "typeHandlerVersion": "1.7",
-                        "autoUpgradeMinorVersion": true,
-                        "settings": {
-                            "fileUris": [
-                                "[concat(variables('_artifactsLocation'), '/Modules/ARM/UserCreation/scripts/createUsers.ps1')]"
-                            ],
-                            "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File createUsers.ps1 ', variables('existingDomainName'), ' ', variables('targetGroup'), ' ', variables('_artifactsLocation'), ' ', variables('existingDomainUsername'), ' ', parameters('DomainJoinAccountPassword'), ' ', variables('devOpsName'))]"
-                        }
-                    }
-                }
-                ]
-            },
-            "parameters": {}
             }
         }
     ],
