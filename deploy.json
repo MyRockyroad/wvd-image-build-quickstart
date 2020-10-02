@@ -118,7 +118,10 @@
             "location": "[resourceGroup().location]",
             "dependsOn": [
             ],
-            "tags": {},
+            "tags": {               
+                "Project": "WVD Dev",
+                "Owner": "Lei Zhou"
+                },
             "properties": {
                 "sku": {
                     "name": "Free"
